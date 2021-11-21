@@ -123,11 +123,15 @@ class MeshDrawer
 
 		this.coord = gl.getAttribLocation(this.prog, 'coord');
 
+		this.norm = gl.getAttribLocation(this.prog, 'norm');
+
 		// 4. Creamos los buffers
 		
 		this.buffer = gl.createBuffer();
 
 		this.texCoordsbuffer = gl.createBuffer();
+
+		this.normBuffer = gl.createBuffer();
 
 		gl.useProgram(this.prog);
 		// ...
@@ -177,7 +181,9 @@ class MeshDrawer
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordsbuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
 
-		// 3. Binding y seteo del buffer de normales	
+		// 3. Binding y seteo del buffer de normales
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.normBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);	
 	}
 	
 	// Esta función se llama cada vez que el usuario cambia el estado del checkbox 'Intercambiar Y-Z'
@@ -231,6 +237,11 @@ class MeshDrawer
 
 		gl.vertexAttribPointer( this.coord, 2, gl.FLOAT, false, 0, 0 );
 		gl.enableVertexAttribArray( this.coord );
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.normBuffer);
+	
+		gl.vertexAttribPointer( this.norm, 3, gl.FLOAT, false, 0, 0 );
+		gl.enableVertexAttribArray( this.norm );
 
 		if(this.numTriangles > 0){
 			gl.drawArrays( gl.TRIANGLES, 0, this.numTriangles * 3 );
@@ -299,6 +310,7 @@ class MeshDrawer
 var meshVS = `
 	attribute vec3 pos;
 	attribute vec2 coord;
+	attribute vec3 norm;
 	uniform mat4 mvp;
 	uniform mat4 mv;
 	uniform mat4 swap;
@@ -311,6 +323,8 @@ var meshVS = `
 	{ 
 		gl_Position = mvp * swap * vec4(pos,1);
 		texCoord = coord;
+		vertCoord = vec4(pos,1);
+		normCoord = norm;
 	}
 `;
 

@@ -116,6 +116,12 @@ class MeshDrawer
 
 		this.swap = gl.getUniformLocation(this.prog, 'swap');
 
+		this.matrixNormal = gl.getUniformLocation(this.prog, 'mn');
+
+		this.ld = gl.getUniformLocation(this.prog, 'lightDirection');
+
+		this.shininess = gl.getUniformLocation(this.prog, 'shininess');
+
 		// Usado para determinar si se usa la textura o el color en el fragment shader
 		this.useTexture = gl.getUniformLocation(this.prog, 'useTexture');
 
@@ -226,6 +232,8 @@ class MeshDrawer
 
 		gl.uniformMatrix4fv(this.mv, false, matrixMV);
 
+		gl.uniformMatrix3fv(this.matrixNormal, false, matrixNormal);
+
    		// 3. Habilitar atributos: vértices, normales, texturas
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
@@ -287,12 +295,16 @@ class MeshDrawer
 	setLightDir( x, y, z )
 	{		
 		// [COMPLETAR] Setear variables uniformes en el fragment shader para especificar la dirección de la luz
+		gl.useProgram(this.prog);
+		gl.uniform3fv(this.ld, [x,y,z]);
 	}
 		
 	// Este método se llama al actualizar el brillo del material 
 	setShininess( shininess )
 	{		
 		// [COMPLETAR] Setear variables uniformes en el fragment shader para especificar el brillo.
+		gl.useProgram(this.prog);
+		gl.uniform1f(this.shininess, shininess);
 	}
 }
 
@@ -323,7 +335,7 @@ var meshVS = `
 	{ 
 		gl_Position = mvp * swap * vec4(pos,1);
 		texCoord = coord;
-		vertCoord = vec4(pos,1);
+		vertCoord = - (mv * vec4(pos,1));
 		normCoord = norm;
 	}
 `;
@@ -344,12 +356,32 @@ var meshFS = `
 	varying vec3 normCoord;
 	varying vec4 vertCoord;
 
+	uniform vec3 lightDirection;
+
+	uniform float shininess;
+
+	vec4 kd;
+	vec4 ks;
+	vec4 i;
+	vec4 v;
+	vec3 n;
+	float comp_difusa;
+	vec4 h;
+	float comp_especular;
+
 	void main()
 	{		
-		if (useTexture == 0){
-			gl_FragColor = vec4(1,0,gl_FragCoord.z*gl_FragCoord.z,1);
-		} else {
-			gl_FragColor = texture2D(texGPU,texCoord);
+		kd = vec4(1,1,1,1);
+		ks = vec4(1,1,1,1);
+		i = vec4(1,1,1,1);
+		if (useTexture != 0){
+			kd = texture2D(texGPU,texCoord);
 		}
+		v = vertCoord;
+		n = mn * normCoord;
+		comp_difusa = dot(vec4(n,1),vec4(lightDirection,1));
+		h = normalize(vec4(lightDirection,1) + v);
+		comp_especular = dot(vec4(n,1),h);
+		gl_FragColor = i * max(0.0,comp_difusa)*(kd + ks*pow(max(0.0,comp_especular),shininess)/comp_difusa);
 	}
 `;

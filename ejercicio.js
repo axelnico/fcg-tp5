@@ -379,7 +379,7 @@ var meshFS = `
 		}
 		v = vertCoord;
 		n = mn * normCoord;
-		comp_difusa = dot(vec4(n,1),vec4(lightDirection,1));
+		comp_difusa = dot(n,lightDirection);
 		h = normalize(vec4(lightDirection,1) + v);
 		comp_especular = dot(vec4(n,1),h);
 		gl_FragColor = i * max(0.0,comp_difusa)*(kd + ks*pow(max(0.0,comp_especular),shininess)/comp_difusa);

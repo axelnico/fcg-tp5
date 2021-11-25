@@ -378,7 +378,7 @@ var meshFS = `
 			kd = texture2D(texGPU,texCoord);
 		}
 		v = vertCoord;
-		n = mn * normCoord;
+		n = normalize(mn * normCoord);
 		comp_difusa = dot(n,lightDirection);
 		h = normalize(vec4(lightDirection,1) + v);
 		comp_especular = dot(vec4(n,1),h);
